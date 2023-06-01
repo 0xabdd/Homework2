@@ -2,35 +2,76 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using AgeCalculator.Models;
+using System.Collections.Generic;
 
 namespace AgeCalculator.Pages
 {
     public class IndexModel : PageModel
     {
         [BindProperty]
-        public Person Person1 { get; set; }
-
-        [BindProperty]
-        public Person Person2 { get; set; }
-
-        [BindProperty]
-        public Person Person3 { get; set; }
+        public List<Person> People { get; set; }
 
         public void OnGet()
         {
+            People = new List<Person>();
+            AddNewPerson();
         }
 
         public IActionResult OnPost()
         {
-            var person1Age = CalculateAge(Person1.BirthDate);
-            var person2Age = CalculateAge(Person2.BirthDate);
-            var person3Age = CalculateAge(Person3.BirthDate);
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
 
-            ViewData["Person1Age"] = person1Age;
-            ViewData["Person2Age"] = person2Age;
-            ViewData["Person3Age"] = person3Age;
+            var validPeople = GetValidPeople();
+
+            if (validPeople.Count < 3 || validPeople.Count > 5)
+            {
+                return Page();
+            }
+
+            var peopleWithAges = CalculateAges(validPeople);
+
+            ViewData["People"] = peopleWithAges;
 
             return Page();
+        }
+
+        public void AddNewPerson()
+        {
+            if (People.Count < 5)
+            {
+                People.Add(new Person());
+            }
+        }
+
+        private List<Person> GetValidPeople()
+        {
+            var validPeople = new List<Person>();
+
+            foreach (var person in People)
+            {
+                if (!string.IsNullOrEmpty(person.Name) && person.BirthDate != null)
+                {
+                    validPeople.Add(person);
+                }
+            }
+
+            return validPeople;
+        }
+
+        private List<PersonInfo> CalculateAges(List<Person> people)
+        {
+            var peopleWithAges = new List<PersonInfo>();
+
+            foreach (var person in people)
+            {
+                var age = CalculateAge(person.BirthDate);
+                peopleWithAges.Add(new PersonInfo { Person = person, Age = age });
+            }
+
+            return peopleWithAges;
         }
 
         private int CalculateAge(DateTime birthDate)
@@ -41,6 +82,12 @@ namespace AgeCalculator.Pages
                 age--;
 
             return age;
+        }
+
+        public class PersonInfo
+        {
+            public Person Person { get; set; }
+            public int Age { get; set; }
         }
     }
 }

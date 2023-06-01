@@ -7,47 +7,99 @@
 <h1>@ViewData["Title"]</h1>
 
 <form method="post">
-    <h2>Person 1</h2>
-    <div>
-        <label for="person1Name">Name:</label>
-        <input type="text" id="person1Name" name="Person1.Name" required>
-    </div>
-    <div>
-        <label for="person1BirthDate">Birth Date:</label>
-        <input type="date" id="person1BirthDate" name="Person1.BirthDate" required>
-    </div>
-
-    <h2>Person 2</h2>
-    <div>
-        <label for="person2Name">Name:</label>
-        <input type="text" id="person2Name" name="Person2.Name" required>
-    </div>
-    <div>
-        <label for="person2BirthDate">Birth Date:</label>
-        <input type="date" id="person2BirthDate" name="Person2.BirthDate" required>
+    <h2>People Information</h2>
+    <div id="people-container">
+        @for (var i = 0; i < 3; i++)
+        {
+            <h3>Person @(i + 1)</h3>
+            <div>
+                <label for="People[@i].Name">Name:</label>
+                <input type="text" id="People[@i].Name" name="People[@i].Name" required>
+            </div>
+            <div>
+                <label for="People[@i].BirthDate">Birth Date:</label>
+                <input type="date" id="People[@i].BirthDate" name="People[@i].BirthDate" required>
+            </div>
+        }
     </div>
 
-    <h2>Person 3</h2>
-    <div>
-        <label for="person3Name">Name:</label>
-        <input type="text" id="person3Name" name="Person3.Name" required>
-    </div>
-    <div>
-        <label for="person3BirthDate">Birth Date:</label>
-        <input type="date" id="person3BirthDate" name="Person3.BirthDate" required>
-    </div>
+    @if (Model.People.Count < 5)
+    {
+        <div id="add-person-container">
+            <button type="button" onclick="addPerson()">Add Person</button>
+        </div>
+    }
 
     <div>
         <button type="submit">Calculate</button>
     </div>
 </form>
 
-@if (ViewData["Person1Age"] != null && ViewData["Person2Age"] != null && ViewData["Person3Age"] != null)
+@if (ViewData["People"] is List<AgeCalculator.Pages.IndexModel.PersonInfo> people && people.Count > 0)
 {
-    <h2>Ages:</h2>
-    <ul>
-        <li>@ViewData["Person1Age"]</li>
-        <li>@ViewData["Person2Age"]</li>
-        <li>@ViewData["Person3Age"]</li>
-    </ul>
+    var sortedPeople = people.OrderBy(p => p.Age).ToList(); 
+    <h2>Results for Ascending:</h2>
+    <table>
+        <tr>
+            <th>Name </th>
+            <th>Age </th>
+        </tr>
+        @foreach (var personInfo in sortedPeople)
+        {
+            <tr>
+                <td>@personInfo.Person.Name </td>
+                <td>@( personInfo.Age + " years old")</td>
+            </tr>
+        }
+    </table>
+    var descendingPeople = people.OrderByDescending(p => p.Age).ToList(); 
+    <h2>Results for Descending:</h2>
+    <table>
+        <tr>
+            <th>Name </th>
+            <th>Age </th>
+        </tr>
+        @foreach (var personInfo in descendingPeople)
+        {
+            <tr>
+                <td>@personInfo.Person.Name </td>
+                <td>@( personInfo.Age + " years old")</td>
+            </tr>
+        }
+    </table>
 }
+
+<script>
+    var currentIndex = 4;
+
+    function addPerson() {
+        if (currentIndex > 5) {
+            return; 
+        }
+
+        var index = currentIndex;
+        var html = `<div>
+                        <h3>Person ${index}</h3>
+                        <div>
+                            <label for="People[${index - 1}].Name">Name:</label>
+                            <input type="text" id="People_${index - 1}__Name" name="People[${index - 1}].Name" required>
+                        </div>
+                        <div>
+                            <label for="People[${index - 1}].BirthDate">Birth Date:</label>
+                            <input type="date" id="People_${index - 1}__BirthDate" name="People[${index - 1}].BirthDate" required>
+                        </div>
+                    </div>`;
+
+        var div = document.createElement("div");
+        div.innerHTML = html;
+        var peopleContainer = document.getElementById("people-container");
+        peopleContainer.appendChild(div);
+
+        currentIndex++;
+
+        if (currentIndex > 5) {
+            var addPersonContainer = document.getElementById("add-person-container");
+            addPersonContainer.style.display = "none";
+        }
+    }
+</script>
